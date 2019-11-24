@@ -2,12 +2,17 @@ import requests
 from flask import Flask, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from extra import login_required
+import pymysql
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 app.config['SECRET_KEY'] = 'hard to guess'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:210377091ztc@localhost:3306/attempt?charset=utf8mb4'
 db = SQLAlchemy(app)
+
+conn = pymysql.connect(host='localhost', port=3306,  user='root', passwd='210377091ztc', db="attempt")
+cur = conn.cursor()
+
 # 登录
 @app.route("/login")
 def get_token():
@@ -40,7 +45,7 @@ class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
-    text = db.relationship('Text', backref='user')
+    text = db.relationship('Note', backref='user')
 
     def __repr__(self):
         return '<User {}> '.format(self.name)
@@ -53,21 +58,22 @@ class Note(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):
-        return '<Text {}> '.format(self.user_text)
+        return '<Note {}> '.format(self.user_text)
 
-# 创建用户
-app.route('/create')
+
+# 创建用户名
+@app.route('/create')
 @login_required
 def create_user():
     input_name = request.args.get('name')
     name_ = User(name=input_name)
 
-    db.session.add_all(name_)
+    db.session.add_all([name_])
     db.session.commit()
 
-# 添加手帐
+# 添加手账
 @app.route('/notepad/add')
-@login_required
+# @login_required
 def add_notepad():
     text = request.args.get('text')
     time = request.args.get('time')
@@ -76,10 +82,13 @@ def add_notepad():
     new_note = Note(text=text, time=time)
     db.session.add_all([new_note])
     db.session.commit()
+    return text, time
+
 # 删除手账
-# @app.route('/delete')
-# @login_required
-# def delete():
+@app.route('/delete')
+@login_required
+def delete():
+    return 'hello'
 
 if __name__ == '__main__':
     db.create_all()
