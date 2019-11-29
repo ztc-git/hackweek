@@ -84,12 +84,6 @@ def add_notepad():
     db.session.commit()
     return text, time
 
-# 删除手账
-@app.route('/delete')
-@login_required
-def delete():
-    return 'hello'
-
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
